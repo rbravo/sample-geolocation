@@ -26,7 +26,7 @@ geolocationApp.prototype = {
     
 	run:function() {
 		var that = this;
-		//this.getLocation();
+		this.getLocation();
 	},
 
 	getLocation:function(){
@@ -64,7 +64,7 @@ geolocationApp.prototype = {
 	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
           	function(resp){
                 //$('#tx').val(resp);
-                $.each(resp.data,function(o){
+                $.each(resp.data,function(i,o){
             		var marker = new google.maps.Marker({
                     	position: new google.maps.LatLng(o.location.latitude, o.location.longitude),
                         map: that.map
