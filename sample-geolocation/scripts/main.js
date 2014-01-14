@@ -26,7 +26,7 @@ geolocationApp.prototype = {
     
 	run:function() {
 		var that = this;
-		this.getLocation();
+		//this.getLocation();
 	},
 
 	getLocation:function(){
