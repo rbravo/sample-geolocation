@@ -6,27 +6,75 @@ document.addEventListener("deviceready", onDeviceReady, false);
  
 function onDeviceReady() {
 	navigator.splashscreen.hide();
-    geolocationApp = new geolocationApp();
+    init();
+}
+function init(){
+	geolocationApp = new geolocationApp();
 	geolocationApp.run();
-    
 }
  
+$(document).ready(init);
+
 function geolocationApp() {
-}
+};
 
 geolocationApp.prototype = {
 	_watchID:null,
+	map:null,
+	lat:0,
+	lon:0,
     
 	run:function() {
 		var that = this;
-		document.getElementById("watchButton").addEventListener("click", function() {
-			that._handleWatch.apply(that, arguments);
-		}, false);
-		document.getElementById("refreshButton").addEventListener("click", function() {
-			that._handleRefresh.apply(that, arguments);
-		}, false);
+		this.getLocation();
 	},
-    
+
+	getLocation:function(){
+		var that = this;
+		navigator.geolocation.getCurrentPosition(function() {
+		// Successfully retrieved the geolocation information. Display it all.
+        
+		/*this._setResults('Latitude: ' + position.coords.latitude + '<br />' +
+						 'Longitude: ' + position.coords.longitude + '<br />' +
+						 'Altitude: ' + position.coords.altitude + '<br />' +
+						 'Accuracy: ' + position.coords.accuracy + '<br />' +*/
+			that.lat = position.coords.latitude;
+			that.lon = position.coords.longitude;
+			that.initMap(that.lat,that.lon);
+
+		},function(e){
+			alert('error: '+ e.message);
+			that.initMap();
+		});
+	},
+    initMap: function(_lat,_lon){
+
+		var myOptions = {
+		    zoom: 11,
+		    center: new google.maps.LatLng(_lat==null?-22.907072809355967:_lat, _lon==null?-43.21398052978515:_lon),
+		    mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+
+		this.map = new google.maps.Map($('#map_canvas')[0], myOptions);
+		var markers = [];
+		this.refreshNearby();
+    },
+    refreshNearby:function(){
+    	var that = this;
+	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
+          	function(resp){
+                //$('#tx').val(resp);
+                $.each(resp.data,function(o){
+            		var marker = new google.maps.Marker({
+                    	position: new google.maps.LatLng(o.location.latitude, o.location.longitude),
+                        map: that.map
+                    });
+              	});
+      		}
+  		);
+        
+    },
+
 	_handleRefresh:function() {
 		var options = {
 			enableHighAccuracy: true
@@ -40,22 +88,18 @@ geolocationApp.prototype = {
 	},
     
 	_handleWatch:function() {
-		var that = this,
+		var that = this;
 		// If watch is running, clear it now. Otherwise, start it.
-		button = document.getElementById("watchButton");
-                     
+		             
 		if (that._watchID != null) {
-			that._setResults();
 			navigator.geolocation.clearWatch(that._watchID);
 			that._watchID = null;
-                         
-			button.innerHTML = "Start Geolocation Watch";
 		}
 		else {
 			that._setResults("Waiting for geolocation information...");
 			// Update the watch every second.
 			var options = {
-				frequency: 1000,
+				frequency: 3000,
 				enableHighAccuracy: true
 			};
 			that._watchID = navigator.geolocation.watchPosition(function() {
