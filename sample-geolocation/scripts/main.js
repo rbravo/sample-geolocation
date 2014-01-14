@@ -31,7 +31,7 @@ geolocationApp.prototype = {
 
 	getLocation:function(){
 		var that = this;
-		navigator.geolocation.getCurrentPosition(function() {
+		navigator.geolocation.getCurrentPosition(function(position) {
 		// Successfully retrieved the geolocation information. Display it all.
         
 		/*this._setResults('Latitude: ' + position.coords.latitude + '<br />' +
