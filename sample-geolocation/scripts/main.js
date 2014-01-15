@@ -85,8 +85,13 @@ geolocationApp.prototype = {
 					var dateInt = parseInt(o.created_time) * 1000;
 					marker.infowindow = new google.maps.InfoWindow({
 			        	content: "<div><img width='"+(that.winWidth-100)+"' height='"+(that.winWidth-100)+"' src='"+o.images.standard_resolution.url+"'/>" 
-			        			+"<div><a href='"+o.link+"'>"+o.user.username+"</a> <i>"+parseInstagramDate(dateInt)+"</i>"
-			        			+"<span clas='likes'>"+o.likes.length+"</span></div>"
+		        				+	"<div><a href='"+o.link+"'>"+o.user.username+"</a>"
+		        				+	"<img src='images/heart.png' style='position:relative;margin-left:15px;margin-right:4px;'>"+o.likes.count+"</span>"
+		        				+	"<img src='images/comment.png' style='position:relative;margin-left:15px;margin-right:4px;'>"+o.comments.count+"</span>"
+		        				+	"<i style='margin-left:15px;'>"+parseInstagramDate(dateInt)+"</i>"
+		        				+	"</div>"
+		        				+	"<div style='max-width:"+(that.winWidth-100)+"px;max-height:60px;overflow:scroll;overflow-x:hidden;text-align:justify;'>" + (o.caption==null?'':o.caption.text)
+		        				+	"</div>"
 			        			+"</div>"
 			        });
 
