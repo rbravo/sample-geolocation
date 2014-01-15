@@ -58,18 +58,44 @@ geolocationApp.prototype = {
 		this.map = new google.maps.Map($('#map_canvas')[0], myOptions);
 		var markers = [];
 		this.refreshNearby();
+		this.winWidth = $(window).width();
+		this.winHeight = $(window).height();
     },
     refreshNearby:function(){
     	var that = this;
+    	var bounds = new google.maps.LatLngBounds();
 	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
           	function(resp){
                 //$('#tx').val(resp);
                 $.each(resp.data,function(i,o){
+                	var pos = new google.maps.LatLng(o.location.latitude, o.location.longitude);
+                	var pinIcon = new google.maps.MarkerImage(
+					    o.images.thumbnail.url,
+					    null, /* size is determined at runtime */
+					    null, /* origin is 0,0 */
+					    null, /* anchor is bottom center of the scaled image */
+					    new google.maps.Size(44, 44)
+					);  
             		var marker = new google.maps.Marker({
-                    	position: new google.maps.LatLng(o.location.latitude, o.location.longitude),
-                        map: that.map
+                    	position: pos,
+                        map: that.map,
+                        icon: pinIcon
                     });
+					bounds.extend(pos);
+					var dateInt = parseInt(o.created_time) * 1000;
+					marker.infowindow = new google.maps.InfoWindow({
+			        	content: "<div><img width='"+(that.winWidth-100)+"' height='"+(that.winWidth-100)+"' src='"+o.images.standard_resolution.url+"'/>" 
+			        			+"<div><a href='"+o.link+"'>"+o.user.username+"</a> <i>"+parseInstagramDate(dateInt)+"</i>"
+			        			+"<span clas='likes'>"+o.likes.length+"</span></div>"
+			        			+"</div>"
+			        });
+
+			         google.maps.event.addListener(marker, 'click', function () {
+				        marker.infowindow.open(that.map, marker);
+				    });
+
               	});
+              	that.map.fitBounds(bounds);
       		}
   		);
         
@@ -138,4 +164,23 @@ geolocationApp.prototype = {
 			document.getElementById("results").innerHTML = value;
 		}
 	},
+}
+
+
+function parseInstagramDate(tdate) {
+    var system_date = new Date(tdate);
+    var user_date = new Date();
+    var diff = Math.floor((user_date - system_date) / 1000);
+    if (diff <= 1) {return "just now";}
+    if (diff < 20) {return diff + " seconds ago";}
+    if (diff < 40) {return "half a minute ago";}
+    if (diff < 60) {return "less than a minute ago";}
+    if (diff <= 90) {return "one minute ago";}
+    if (diff <= 3540) {return Math.round(diff / 60) + " minutes ago";}
+    if (diff <= 5400) {return "1 hour ago";}
+    if (diff <= 86400) {return Math.round(diff / 3600) + " hours ago";}
+    if (diff <= 129600) {return "1 day ago";}
+    if (diff < 604800) {return Math.round(diff / 86400) + " days ago";}
+    if (diff <= 777600) {return "1 week ago";}
+    return "on " + system_date;
 }
