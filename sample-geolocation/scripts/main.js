@@ -13,12 +13,35 @@ function init(){
 	geolocationApp.run();
 	var img = new Image();
 	Image.src = 'images/circle.png';
-	
+
 	$('#location').click(function(){geolocationApp.getLocation();});
 	$('#bulls').click(function(){geolocationApp.setCenter();});
 	$('#refresh').click(function(){geolocationApp.refreshNearby();});
+	$('#listBtn').click(function(){
+		hideActiveScreenThen(function(){
+			hideActiveFirstBtn();
+			$('#mapBtn').addClass('active');
+			var $screen = $('#list_screen');
+			$screen.fadeIn(300,function(){ $screen.addClass('active'); });
+		});
+	});
+
+	$('#mapBtn').click(function(){
+		hideActiveScreenThen(function(){
+			hideActiveFirstBtn();
+			$('#listBtn').addClass('active');
+			var $screen = $('#map_canvas');
+			$screen.fadeIn(300,function(){ $screen.addClass('active'); });
+		});
+	});
 }
- 
+
+function hideActiveFirstBtn() { $('.firstBtn.active').removeClass('active'); } 
+function hideActiveScreenThen(cb) { 
+	var $active = $('.screen.active');
+	$active.fadeOut(300,function(){ $active.removeClass('active'); cb!=null?cb():null; });
+};
+
 $(document).ready(init);
 
 function geolocationApp() {
@@ -32,6 +55,7 @@ geolocationApp.prototype = {
     
 	run:function() {
 		var that = this;
+		this.measure();
 		this.getLocation();
 	},
 
@@ -54,6 +78,12 @@ geolocationApp.prototype = {
 			that.refreshNearby();
 		});
 	},
+	measure: function(){
+		this.winWidth = $(window).width();
+		this.winHeight = $(window).height();
+		$('.screen').height(this.winHeight-50);
+
+	},
     initMap: function(_lat,_lon){
 		if(this.map != null) return;
 		var myOptions = {
@@ -61,12 +91,8 @@ geolocationApp.prototype = {
 		    center: new google.maps.LatLng(_lat==null?-22.907072809355967:_lat, _lon==null?-43.21398052978515:_lon),
 		    mapTypeId: google.maps.MapTypeId.ROADMAP
 		};
-
 		this.map = new google.maps.Map($('#map_canvas')[0], myOptions);
-		var markers = [];
-		
-		this.winWidth = $(window).width();
-		this.winHeight = $(window).height();
+		this.markers = [];
     },
     setCenter:function(){
     	var center = this.map.getCenter();
