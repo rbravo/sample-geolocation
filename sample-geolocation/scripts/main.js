@@ -11,6 +11,12 @@ function onDeviceReady() {
 function init(){
 	geolocationApp = new geolocationApp();
 	geolocationApp.run();
+	var img = new Image();
+	Image.src = 'images/circle.png';
+	
+	$('#location').click(function(){geolocationApp.getLocation();});
+	$('#bulls').click(function(){geolocationApp.setCenter();});
+	$('#refresh').click(function(){geolocationApp.refreshNearby();});
 }
  
 $(document).ready(init);
@@ -41,14 +47,15 @@ geolocationApp.prototype = {
 			that.lat = position.coords.latitude;
 			that.lon = position.coords.longitude;
 			that.initMap(that.lat,that.lon);
-
+			that.refreshNearby();
 		},function(e){
 			alert('error: '+ e.message);
 			that.initMap();
+			that.refreshNearby();
 		});
 	},
     initMap: function(_lat,_lon){
-
+		if(this.map != null) return;
 		var myOptions = {
 		    zoom: 11,
 		    center: new google.maps.LatLng(_lat==null?-22.907072809355967:_lat, _lon==null?-43.21398052978515:_lon),
@@ -57,12 +64,24 @@ geolocationApp.prototype = {
 
 		this.map = new google.maps.Map($('#map_canvas')[0], myOptions);
 		var markers = [];
-		this.refreshNearby();
+		
 		this.winWidth = $(window).width();
 		this.winHeight = $(window).height();
     },
+    setCenter:function(){
+    	var center = this.map.getCenter();
+    	this.lat = center.lat();
+    	this.lon = center.lng();
+    	this.refreshNearby();
+    },
     refreshNearby:function(){
     	var that = this;
+    	if(this.mymarker != null) this.mymarker.setMap(null);
+    	this.mymarker = new google.maps.Marker({
+                    	position: new google.maps.LatLng(this.lat, this.lon),
+                        map: this.map,
+                        icon: 'images/circle.png'
+                    });
     	var bounds = new google.maps.LatLngBounds();
 	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
           	function(resp){
