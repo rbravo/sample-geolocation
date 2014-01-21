@@ -27,11 +27,33 @@ function init(){
 	});
 
 	$('#mapBtn').click(function(){
+		changeScreen($('#map_canvas'),$('#listBtn'));
+	});
+
+	$('#backBtn').click(function(){
+		changeScreen($('#map_canvas'),$('#listBtn'));
+	});
+
+	/*$('#h1').click(function(){
+		var that = $(this);
 		hideActiveScreenThen(function(){
 			hideActiveFirstBtn();
-			$('#listBtn').addClass('active');
-			var $screen = $('#map_canvas');
+			that.addClass('active');
+			var $screen = $('#post_screen');
+			$screen.html(getPostContent(getFakePost()));
 			$screen.fadeIn(300,function(){ $screen.addClass('active'); });
+		});
+	});*/
+}
+
+function changeScreen($nextScreen,$buttonVisible,extraStuffFcn)
+{
+	hideActiveScreenThen(function(){
+		hideActiveFirstBtn();
+		$buttonVisible.addClass('active');
+		$nextScreen.fadeIn(300,function(){ 
+			$nextScreen.addClass('active'); 
+			if(extraStuffFcn) extraStuffFcn();
 		});
 	});
 }
@@ -40,6 +62,12 @@ function hideActiveFirstBtn() { $('.firstBtn.active').removeClass('active'); }
 function hideActiveScreenThen(cb) { 
 	var $active = $('.screen.active');
 	$active.fadeOut(300,function(){ $active.removeClass('active'); cb!=null?cb():null; });
+};
+
+function go2post (htmlcontent) {
+	var $screen = $('#post_screen');
+	$screen.html(htmlcontent);
+	changeScreen($screen,$('#backBtn'));
 };
 
 $(document).ready(init);
@@ -52,6 +80,8 @@ geolocationApp.prototype = {
 	map:null,
 	lat:0,
 	lon:0,
+	markers:[],
+	posts:[],
     
 	run:function() {
 		var that = this;
@@ -81,7 +111,7 @@ geolocationApp.prototype = {
 	measure: function(){
 		this.winWidth = $(window).width();
 		this.winHeight = $(window).height();
-		$('.screen').height(this.winHeight-50);
+		$('.screen').css('min-height',(this.winHeight-$('#header').height()));
 
 	},
     initMap: function(_lat,_lon){
@@ -111,7 +141,12 @@ geolocationApp.prototype = {
     	var bounds = new google.maps.LatLngBounds();
 	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
           	function(resp){
-                //$('#tx').val(resp);
+          		console.log(resp);
+          		$.each(that.markers,function(i,o){
+      				o.setMap(null);
+          		});
+          		that.markers = [];
+          		that.posts = [];
                 $.each(resp.data,function(i,o){
                 	var pos = new google.maps.LatLng(o.location.latitude, o.location.longitude);
                 	var pinIcon = new google.maps.MarkerImage(
@@ -126,10 +161,13 @@ geolocationApp.prototype = {
                         map: that.map,
                         icon: pinIcon
                     });
+                    that.markers.push(marker);
+                    that.posts.push(o);
+                    var oindex = that.posts.length - 1;
+
 					bounds.extend(pos);
 					var dateInt = parseInt(o.created_time) * 1000;
-					marker.infowindow = new google.maps.InfoWindow({
-			        	content: "<div><img width='"+(that.winWidth-100)+"' height='"+(that.winWidth-100)+"' src='"+o.images.standard_resolution.url+"'/>" 
+					var content = "<div><img width='"+(that.winWidth-100)+"' height='"+(that.winWidth-100)+"' src='"+o.images.standard_resolution.url+"'/>" 
 		        				+	"<div><a href='"+o.link+"'>"+o.user.username+"</a>"
 		        				+	"<img src='images/heart.png' style='position:relative;margin-left:15px;margin-right:4px;'>"+o.likes.count+"</span>"
 		        				+	"<img src='images/comment.png' style='position:relative;margin-left:15px;margin-right:4px;'>"+o.comments.count+"</span>"
@@ -137,11 +175,14 @@ geolocationApp.prototype = {
 		        				+	"</div>"
 		        				+	"<div style='max-width:"+(that.winWidth-100)+"px;max-height:60px;overflow:scroll;overflow-x:hidden;text-align:justify;'>" + (o.caption==null?'':o.caption.text)
 		        				+	"</div>"
-			        			+"</div>"
-			        });
+			        			+ "</div>";
+			        //marker.infowindow = new google.maps.InfoWindow({
+			        //	content:content
+			        //});
 
-			         google.maps.event.addListener(marker, 'click', function () {
-				        marker.infowindow.open(that.map, marker);
+			        google.maps.event.addListener(marker, 'click', function () {
+				        //marker.infowindow.open(that.map, marker);
+		        		go2post(getPostContent(that.posts[oindex]));
 				    });
 
               	});
@@ -216,6 +257,41 @@ geolocationApp.prototype = {
 	},
 }
 
+function getPostContent(instapost){
+	geolocationApp.measure();
+	var that = geolocationApp;
+	var o = instapost;
+	var dateInt = parseInt(o.created_time) * 1000;
+	return "<div id='outerpost'><img width='"+(o.images.standard_resolution.width)
+				//+"' height='"+(o.images.standard_resolution.height)
+				//+"' style='max-width:" + that.winWidth + "px;max-height:" + that.winHeight + "px;"
+				+"' src='"+o.images.standard_resolution.url+"'/>" 
+		+	"<div class='postheader'><a href='"+o.link+"'>"+o.user.username+"</a>"
+			+	"<div><img src='images/heart.png' style='position:relative;margin-left:15px;margin-right:4px;'><span>"+o.likes.count+"</span>"
+			+	"<img src='images/comment.png' style='position:relative;margin-left:15px;margin-right:4px;'><span>"+o.comments.count+"</span>"
+			+	"<i style='margin-left:15px;'>"+parseInstagramDate(dateInt)+"</i>"
+			+	"</div>"
+		+	"</div>"
+		+	(o.caption==null?'':"<div class='postcaption'>"+o.caption.text+"</div>")
+		+ "</div>";
+}
+
+function getFakePost () {
+	return {
+		created_time: 123882,
+		images: {
+			standard_resolution: {
+				url: 'http://www.metheora.com/logo.png'
+			}
+		},
+		link: 'http://instagram.com/666',
+		user: {
+			username: 'LOLOLOLOL'
+		},
+		likes: {count:99},
+		comments: {count:13}
+	};
+}
 
 function parseInstagramDate(tdate) {
     var system_date = new Date(tdate);
