@@ -3,10 +3,13 @@ function id(element) {
 }
  
 document.addEventListener("deviceready", onDeviceReady, false);
- 
+ var isiOS = false;
 function onDeviceReady() {
 	navigator.splashscreen.hide();
     init();
+    try{
+		isiOS = device.platform=="iOS";
+    } catch(e){ console.log(e);}
 }
 function init(){
 	geolocationApp = new geolocationApp();
@@ -15,7 +18,7 @@ function init(){
 	Image.src = 'images/circle.png';
 
 	$('#location').click(function(){geolocationApp.getLocation();});
-	$('#bulls').click(function(){geolocationApp.setCenter();});
+	/*$('#bulls').click(function(){geolocationApp.setCenter();});
 	$('#refresh').click(function(){geolocationApp.refreshNearby();});
 	$('#listBtn').click(function(){
 		hideActiveScreenThen(function(){
@@ -29,9 +32,9 @@ function init(){
 	$('#mapBtn').click(function(){
 		changeScreen($('#map_canvas'),$('#listBtn'));
 	});
-
+	*/
 	$('#backBtn').click(function(){
-		changeScreen($('#map_canvas'),$('#listBtn'));
+		changeScreen($('#map_canvas'));
 	});
 
 	/*$('#h1').click(function(){
@@ -50,7 +53,8 @@ function changeScreen($nextScreen,$buttonVisible,extraStuffFcn)
 {
 	hideActiveScreenThen(function(){
 		hideActiveFirstBtn();
-		$buttonVisible.addClass('active');
+		if($buttonVisible)
+			$buttonVisible.addClass('active');
 		$nextScreen.fadeIn(300,function(){ 
 			$nextScreen.addClass('active'); 
 			if(extraStuffFcn) extraStuffFcn();
@@ -58,7 +62,11 @@ function changeScreen($nextScreen,$buttonVisible,extraStuffFcn)
 	});
 }
 
-function hideActiveFirstBtn() { $('.firstBtn.active').removeClass('active'); } 
+function hideActiveFirstBtn(nextIdToActivate) { 
+	$('.firstBtn.active').removeClass('active');
+	if(nextIdToActivate)
+		$(nextIdToActivate).addClass('active');
+} 
 function hideActiveScreenThen(cb) { 
 	var $active = $('.screen.active');
 	$active.fadeOut(300,function(){ $active.removeClass('active'); cb!=null?cb():null; });
@@ -80,8 +88,8 @@ geolocationApp.prototype = {
 	map:null,
 	lat:0,
 	lon:0,
-	markers:[],
-	posts:[],
+	markers:{},
+	posts:{},
     
 	run:function() {
 		var that = this;
@@ -101,7 +109,14 @@ geolocationApp.prototype = {
 			that.lat = position.coords.latitude;
 			that.lon = position.coords.longitude;
 			that.initMap(that.lat,that.lon);
-			that.refreshNearby();
+			if(that.mymarker != null) this.mymarker.setMap(null);
+	    	that.mymarker = new google.maps.Marker({
+	                    	position: new google.maps.LatLng(that.lat, that.lon),
+	                        map: this.map,
+	                        icon: 'images/circle.png'
+	                    });
+	    	
+			that.refreshNearby(true);
 		},function(e){
 			alert('error: '+ e.message);
 			that.initMap();
@@ -119,10 +134,22 @@ geolocationApp.prototype = {
 		var myOptions = {
 		    zoom: 11,
 		    center: new google.maps.LatLng(_lat==null?-22.907072809355967:_lat, _lon==null?-43.21398052978515:_lon),
-		    mapTypeId: google.maps.MapTypeId.ROADMAP
+		    mapTypeId: google.maps.MapTypeId.ROADMAP,
+		    streetViewControl: false
 		};
 		this.map = new google.maps.Map($('#map_canvas')[0], myOptions);
 		this.markers = [];
+		var that = this;
+		google.maps.event.addListener(this.map, 'idle', function() {
+			if(that.to_refresh>0) { 
+				clearTimeout(that.to_refresh);
+				that.to_refresh = 0;
+				console.log('clearedTO:'+that.to_refresh);
+			}
+			that.to_refresh = setTimeout(function(){that.setCenter();console.log('callinRefresh');},600);
+			console.log('setTO->'+that.to_refresh);
+
+    	});
     },
     setCenter:function(){
     	var center = this.map.getCenter();
@@ -130,24 +157,20 @@ geolocationApp.prototype = {
     	this.lon = center.lng();
     	this.refreshNearby();
     },
-    refreshNearby:function(){
+    refreshNearby:function(setBounds){
     	var that = this;
-    	if(this.mymarker != null) this.mymarker.setMap(null);
-    	this.mymarker = new google.maps.Marker({
-                    	position: new google.maps.LatLng(this.lat, this.lon),
-                        map: this.map,
-                        icon: 'images/circle.png'
-                    });
     	var bounds = new google.maps.LatLngBounds();
+    	$('#loadingBtn').show();
 	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
           	function(resp){
           		console.log(resp);
-          		$.each(that.markers,function(i,o){
-      				o.setMap(null);
-          		});
-          		that.markers = [];
-          		that.posts = [];
+          		//$.each(that.markers,function(i,o){
+      			//	o.setMap(null);
+          		//});
+          		//that.markers = [];
+          		//that.posts = [];
                 $.each(resp.data,function(i,o){
+                	if(that.markers[o.link] != null) return; // -> se ja tiver no client nao faz nada
                 	var pos = new google.maps.LatLng(o.location.latitude, o.location.longitude);
                 	var pinIcon = new google.maps.MarkerImage(
 					    o.images.thumbnail.url,
@@ -161,9 +184,9 @@ geolocationApp.prototype = {
                         map: that.map,
                         icon: pinIcon
                     });
-                    that.markers.push(marker);
-                    that.posts.push(o);
-                    var oindex = that.posts.length - 1;
+                    that.markers[o.link] = marker;
+                    that.posts[o.link] = o;
+                    var olink = o.link;
 
 					bounds.extend(pos);
 					var dateInt = parseInt(o.created_time) * 1000;
@@ -182,11 +205,14 @@ geolocationApp.prototype = {
 
 			        google.maps.event.addListener(marker, 'click', function () {
 				        //marker.infowindow.open(that.map, marker);
-		        		go2post(getPostContent(that.posts[oindex]));
+		        		go2post(getPostContent(that.posts[olink]));
 				    });
 
               	});
-              	that.map.fitBounds(bounds);
+				if(setBounds)
+              		that.map.fitBounds(bounds);
+    			
+    			$('#loadingBtn').hide();
       		}
   		);
         
@@ -266,12 +292,14 @@ function getPostContent(instapost){
 				//+"' height='"+(o.images.standard_resolution.height)
 				//+"' style='max-width:" + that.winWidth + "px;max-height:" + that.winHeight + "px;"
 				+"' src='"+o.images.standard_resolution.url+"'/>" 
-		+	"<div class='postheader'><a href='"+o.link+"'>"+o.user.username+"</a>"
-			+	"<div><img src='images/heart.png' style='position:relative;margin-left:15px;margin-right:4px;'><span>"+o.likes.count+"</span>"
-			+	"<img src='images/comment.png' style='position:relative;margin-left:15px;margin-right:4px;'><span>"+o.comments.count+"</span>"
-			+	"<i style='margin-left:15px;'>"+parseInstagramDate(dateInt)+"</i>"
-			+	"</div>"
-		+	"</div>"
+		+	"<table class='postheader'><tr><td><a style='word-break:break-all;' href='#' "+
+				"onclick=\"window.open('" + (isiOS?'instagram://media?id=' + o.id.toString() : o.link) + "', '_system');\">" 
+				+o.user.username.toString()+"</a></td>"
+			+	"<td width='166' class='stats'><img src='images/heart.png' style='position:relative;margin-right:4px;'><span>"+o.likes.count+"</span>"
+			+	"<img src='images/comment.png' style='position:relative;margin-left:10px;margin-right:4px;'><span>"+o.comments.count+"</span>"
+			+	"<i style='margin-left:10px;'>"+parseInstagramDate(dateInt)+"</i>"
+			+	"</td></tr>"
+		+	"</table>"
 		+	(o.caption==null?'':"<div class='postcaption'>"+o.caption.text+"</div>")
 		+ "</div>";
 }

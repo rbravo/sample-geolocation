@@ -8,6 +8,7 @@
 
 		<link rel="stylesheet" type="text/css" href="font/font-awesome/css/font-awesome.min.css">
 		<link rel="stylesheet" href="styles/main.css" />
+		
 		<link rel="stylesheet" href="fonts/opensans.css" />
 
 		<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
@@ -17,15 +18,16 @@
 	</head>
 	<body>
 		<header id="header">
-			<a class="btn firstBtn active" id="listBtn"><i class="fa fa-list"></i></a>
+			<a class="btn firstBtn" id="listBtn"><i class="fa fa-list"></i></a>
 			<a class="btn firstBtn" id="mapBtn"><i class="fa fa-map-marker"></i></a>
-			<a class="btn firstBtn" id="backBtn"><i class="fa fa-chevron-left"></i></a>
+			<a class="btn firstBtn" id="backBtn" style="z-index:999;"><i class="fa fa-chevron-left"></i></a>
+			<span class="btn" id="loadingBtn" style="background:none"><img src="images/loading.gif" style="margin-top: 6px;position: relative;"></i></span>
 			<h1 id="h1">Instaround</h1>
 			<a id="bulls" class="mButton">
                 <div class="bulls"><i id="bullsIcon" class="fa fa-bullseye"></i></div>
              </a>
              <a id="location" class="mButton">
-                <div class="location"><i id="posIcon" class="fa fa-location-arrow"></i></div>
+                <div class="location"><i id="posIcon" style="font-size: 18px;line-height: 37px;" class="fa fa-location-arrow"></i></div>
              </a>
              <a id="refresh" class="mButton">
                 <div class="refresh"><i id="refreshIcon" class="fa fa-refresh"></i></div>
