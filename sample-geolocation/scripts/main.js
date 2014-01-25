@@ -10,6 +10,7 @@ function onDeviceReady() {
     try{
     	var deviceType = (navigator.userAgent.match(/iPad/i))  == "iPad" ? "iPad" : (navigator.userAgent.match(/iPhone/i))  == "iPhone" ? "iPhone" : (navigator.userAgent.match(/Android/i)) == "Android" ? "Android" : (navigator.userAgent.match(/BlackBerry/i)) == "BlackBerry" ? "BlackBerry" : "null";
 		isiOS = deviceType=="iPhone"||deviceType=="iPad";
+		alert('deviceType: '+deviceType);
     } catch(e){ console.log(e);}
 }
 function init(){
@@ -294,7 +295,7 @@ function getPostContent(instapost){
 				//+"' style='max-width:" + that.winWidth + "px;max-height:" + that.winHeight + "px;"
 				+"' src='"+o.images.standard_resolution.url+"'/>" 
 		+	"<table class='postheader'><tr><td><a style='word-break:break-all;' href='#' "+
-				"onclick=\"window.open('" + (isiOS?'instagram://media?id=' + o.id.toString() : o.link) + "', '_system');\">" 
+				"onclick=\"window.open('" + (isiOS?'instagram://media?id=' + o.id.toString() : o.link) + "', '_blank','location=yes');\">" 
 				+o.user.username.toString()+"</a></td>"
 			+	"<td width='166' class='stats'><img src='images/heart.png' style='position:relative;margin-right:4px;'><span>"+o.likes.count+"</span>"
 			+	"<img src='images/comment.png' style='position:relative;margin-left:10px;margin-right:4px;'><span>"+o.comments.count+"</span>"
