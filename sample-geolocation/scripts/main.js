@@ -7,7 +7,6 @@ function id(element) {
 
 var isiOS = false;
 function onDeviceReady() {
-	navigator.splashscreen.hide();
     init();
 }
 function init(){
@@ -52,6 +51,8 @@ function init(){
 			$screen.fadeIn(300,function(){ $screen.addClass('active'); });
 		});
 	});*/
+
+	navigator.splashscreen.hide();
 }
 
 function changeScreen($nextScreen,$buttonVisible,extraStuffFcn)
