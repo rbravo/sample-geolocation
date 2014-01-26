@@ -121,7 +121,7 @@ geolocationApp.prototype = {
 	                        map: this.map,
 	                        icon: 'images/circle.png'
 	                    });
-	    	
+	    	that.map.setCenter(new google.maps.LatLng(that.lat, that.lon));
 			that.refreshNearby(true);
 		},function(e){
 			alert('error: '+ e.message);

@@ -106,6 +106,7 @@
     -->
     
     <gap:plugin name="org.apache.cordova.geolocation" />
+    <gap:plugin name="org.apache.cordova.splashscreen" />
 
     <access origin="*" />
 
