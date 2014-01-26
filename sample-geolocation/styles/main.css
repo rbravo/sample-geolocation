@@ -32,7 +32,16 @@ body
     text-align: center;
     height: 50px;
     color:#fff;
+
+    -webkit-box-shadow: rgba(111, 151, 182, 0.498039) 0px 1px 0px 0px inset, rgba(111, 151, 182, 0.2) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.2) 0px 1px 1px 0px;
+    -webkit-font-smoothing: antialiased;
+    background-color: rgb(81, 127, 164);
+    background-image: -webkit-linear-gradient(top, rgb(81, 127, 164), rgb(48, 96, 136));
+    background-position: 50% 50%, 50% 50%;
+    box-shadow: rgba(111, 151, 182, 0.498039) 0px 1px 0px 0px inset, rgba(111, 151, 182, 0.2) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.2) 0px 1px 1px 0px;
+    color:#f2f2f2;
 }
+
 #header h1{
     font-family:'Open Sans',Sans-Serif;
     font-size: 26px;
