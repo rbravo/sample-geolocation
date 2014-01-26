@@ -1,9 +1,11 @@
 function id(element) {
 	return document.getElementById(element);
 }
- 
-document.addEventListener("deviceready", onDeviceReady, false);
- var isiOS = false;
+ $(function(){
+	document.addEventListener("deviceready", onDeviceReady, false);
+});
+
+var isiOS = false;
 function onDeviceReady() {
 	navigator.splashscreen.hide();
     init();
