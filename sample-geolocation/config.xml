@@ -86,7 +86,8 @@
     <preference name="android-targetSdkVersion" value="19" /> <!-- targeting Android 4.4 -->
     <preference name="android-installLocation" value="auto" />
     <preference name="android-windowSoftInputMode" value="stateVisible|adjustResize" />
-    <preference name="splash-screen-duration" value="5000" />
+    <preference name="splash-screen-duration" value="10000" />
+    <preference name="AutoHideSplashScreen" value="false" />
 
     <preference name="load-url-timeout" value="20000" />
         
@@ -105,6 +106,8 @@
     -->
     
     <gap:plugin name="org.apache.cordova.geolocation" />
+
+
 
     <access origin="*" />
 
