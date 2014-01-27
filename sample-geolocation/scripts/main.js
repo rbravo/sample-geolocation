@@ -51,8 +51,9 @@ function init(){
 			$screen.fadeIn(300,function(){ $screen.addClass('active'); });
 		});
 	});*/
-
+	try{
 	navigator.splashscreen.hide();
+	} catch(e){console.log(e);}
 }
 
 function changeScreen($nextScreen,$buttonVisible,extraStuffFcn)
@@ -61,10 +62,10 @@ function changeScreen($nextScreen,$buttonVisible,extraStuffFcn)
 		hideActiveFirstBtn();
 		if($buttonVisible)
 			$buttonVisible.addClass('active');
-		$nextScreen.fadeIn(300,function(){ 
+	});
+	showScreenThen($nextScreen,function(){
 			$nextScreen.addClass('active'); 
 			if(extraStuffFcn) extraStuffFcn();
-		});
 	});
 }
 
@@ -78,6 +79,9 @@ function hideActiveScreenThen(cb) {
 	$active.fadeOut(300,function(){ $active.removeClass('active'); cb!=null?cb():null; });
 };
 
+function showScreenThen($screen,cb){
+	$screen.fadeIn(300,function(){ $screen.addClass('active'); cb!=null?cb():null; });
+}
 function go2post (htmlcontent) {
 	var $screen = $('#post_screen');
 	$screen.html(htmlcontent);
@@ -96,6 +100,7 @@ geolocationApp.prototype = {
 	lon:0,
 	markers:{},
 	posts:{},
+	userLocation:null,
     
 	run:function() {
 		var that = this;
@@ -114,14 +119,15 @@ geolocationApp.prototype = {
 						 'Accuracy: ' + position.coords.accuracy + '<br />' +*/
 			that.lat = position.coords.latitude;
 			that.lon = position.coords.longitude;
+			that.userLocation = new google.maps.LatLng(that.lat, that.lon);
 			that.initMap(that.lat,that.lon);
-			if(that.mymarker != null) this.mymarker.setMap(null);
+			if(that.mymarker != null) that.mymarker.setMap(null);
 	    	that.mymarker = new google.maps.Marker({
-	                    	position: new google.maps.LatLng(that.lat, that.lon),
+	                    	position: that.userLocation,
 	                        map: this.map,
 	                        icon: 'images/circle.png'
 	                    });
-	    	that.map.setCenter(new google.maps.LatLng(that.lat, that.lon));
+	    	that.map.setCenter(that.userLocation);
 			that.refreshNearby(true);
 		},function(e){
 			alert('error: '+ e.message);
@@ -152,7 +158,7 @@ geolocationApp.prototype = {
 				that.to_refresh = 0;
 				console.log('clearedTO:'+that.to_refresh);
 			}
-			that.to_refresh = setTimeout(function(){that.setCenter();console.log('callinRefresh');},600);
+			that.to_refresh = setTimeout(function(){that.setCenter();console.log('callinRefresh');},800);
 			console.log('setTO->'+that.to_refresh);
 
     	});
@@ -176,8 +182,9 @@ geolocationApp.prototype = {
           		//that.markers = [];
           		//that.posts = [];
                 $.each(resp.data,function(i,o){
-                	if(that.markers[o.link] != null) return; // -> se ja tiver no client nao faz nada
                 	var pos = new google.maps.LatLng(o.location.latitude, o.location.longitude);
+					bounds.extend(pos);
+                	if(that.markers[o.link] != null) return; // -> se ja tiver no client nao faz nada
                 	var pinIcon = new google.maps.MarkerImage(
 					    o.images.thumbnail.url,
 					    null, /* size is determined at runtime */
@@ -194,7 +201,6 @@ geolocationApp.prototype = {
                     that.posts[o.link] = o;
                     var olink = o.link;
 
-					bounds.extend(pos);
 					var dateInt = parseInt(o.created_time) * 1000;
 					var content = "<div><img width='"+(that.winWidth-100)+"' height='"+(that.winWidth-100)+"' src='"+o.images.standard_resolution.url+"'/>" 
 		        				+	"<div><a href='"+o.link+"'>"+o.user.username+"</a>"
