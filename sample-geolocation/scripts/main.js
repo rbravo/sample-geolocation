@@ -19,12 +19,13 @@ function init(){
 		//alert('deviceType: '+deviceType);
     } catch(e){ console.log(e);}
 
-    gaPlugin = window.plugins.gaPlugin;
-    gaPlugin.init(function(){ 
-    	console.log('analytics success!');
-    }, function(e){ console.log(e); }, 
-    'UA-9234405-12', 10);
-
+    try{
+	    gaPlugin = window.plugins.gaPlugin;
+	    gaPlugin.init(function(){ 
+	    	console.log('analytics success!');
+	    }, function(e){ console.log(e); }, 
+	    'UA-9234405-12', 10);
+	} catch(e){ console.log(e); }
 
 	geolocationApp = new geolocationApp();
 	geolocationApp.run();
@@ -183,12 +184,20 @@ geolocationApp.prototype = {
     	var that = this;
     	var bounds = new google.maps.LatLngBounds();
     	$('#loadingBtn').show();
+
 	    $.getJSON('https://api.instagram.com/v1/media/search?lat='+that.lat+'&lng='+that.lon+'&client_id=f9a471af537e46a48d14e83f76949f89',
           	function(resp){
-          		console.log(resp);
-          		//$.each(that.markers,function(i,o){
-      			//	o.setMap(null);
-          		//});
+          		//console.log(resp);
+
+          		// tem mto marker ja?
+          		if(Object.keys(that.markers).length>150)
+          		{
+          			console.log('clean markers');
+	          		$.each(that.markers,function(i,o){
+	      				o.setMap(null);
+	          		});
+	          		that.markers = {};
+          		}
           		//that.markers = [];
           		//that.posts = [];
                 $.each(resp.data,function(i,o){
