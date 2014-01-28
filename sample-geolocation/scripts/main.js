@@ -16,6 +16,12 @@ function init(){
 		//alert('deviceType: '+deviceType);
     } catch(e){ console.log(e);}
 
+    gaPlugin = window.plugins.gaPlugin;
+    gaPlugin.init(function(){ 
+    	console.log('analytics success!');
+    }, function(e){ console.log(e); }, 
+    'UA-9234405-11', 10);
+
 	geolocationApp = new geolocationApp();
 	geolocationApp.run();
 	var img = new Image();
